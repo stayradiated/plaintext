@@ -32,7 +32,7 @@ type Template struct {
 	Content string
 }
 
-func copyFile(srcPath string) (err error) {
+func copyFile(srcPath string, template *template.Template) (err error) {
 	destPath := strings.TrimSuffix(srcPath, ".txt") + ".html"
 
 	src, err := ioutil.ReadFile(srcPath)
@@ -45,15 +45,36 @@ func copyFile(srcPath string) (err error) {
 		return err
 	}
 
-	err = defaultTemplate.Execute(f, &Template{
+	err = template.Execute(f, &Template{
 		Title:   srcPath,
 		Content: string(replaceLinks(src)),
 	})
 	return err
 }
 
+func readUserTemplate(path string) (*template.Template, error) {
+	src, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	userTemplate, err := template.New("user").Parse(string(src))
+	return userTemplate, err
+}
+
 func main() {
-	err := filepath.Walk(".",
+	var err error
+
+	template := defaultTemplate
+
+	if len(os.Args) > 1 {
+		templatePath := os.Args[1]
+		template, err = readUserTemplate(templatePath)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	err = filepath.Walk(".",
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
@@ -62,7 +83,7 @@ func main() {
 			if !info.IsDir() {
 				name := info.Name()
 				if strings.HasSuffix(name, ".txt") {
-					err := copyFile(path)
+					err := copyFile(path, template)
 					if err != nil {
 						return err
 					}
@@ -70,8 +91,7 @@ func main() {
 			}
 			return err
 		})
-
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 }
