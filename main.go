@@ -6,17 +6,36 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 )
+
+var defaultTemplate = template.Must(template.New("default").Parse(`<!doctype html>
+<head><title>{{.Title}}</title></head><body><pre><code>
+{{.Content}}
+</code></pre></body>`))
+
+type Template struct {
+	Title   string
+	Content string
+}
 
 func copyFile(srcPath string) (err error) {
 	destPath := strings.TrimSuffix(srcPath, ".txt") + ".html"
 
-	data, err := ioutil.ReadFile(srcPath)
+	src, err := ioutil.ReadFile(srcPath)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(destPath, data, 0644)
+	f, err := os.Create(destPath)
+	if err != nil {
+		return err
+	}
+
+	err = defaultTemplate.Execute(f, &Template{
+		Title:   srcPath,
+		Content: string(src),
+	})
 	return err
 }
 
