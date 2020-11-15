@@ -1,13 +1,26 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"text/template"
 )
+
+var linkRegExp = regexp.MustCompile(`\[\[([^\[\]]*)\]\]`)
+
+func replaceLinks(src []byte) []byte {
+	return linkRegExp.ReplaceAllFunc(src, func(match []byte) []byte {
+		text := string(match)
+		href := strings.Trim(text, "[] ")
+		tag := fmt.Sprintf(`<a href="%s">%s</a>`, href, text)
+		return []byte(tag)
+	})
+}
 
 var defaultTemplate = template.Must(template.New("default").Parse(`<!doctype html>
 <head><title>{{.Title}}</title></head><body><pre><code>
@@ -34,7 +47,7 @@ func copyFile(srcPath string) (err error) {
 
 	err = defaultTemplate.Execute(f, &Template{
 		Title:   srcPath,
-		Content: string(src),
+		Content: string(replaceLinks(src)),
 	})
 	return err
 }
