@@ -19,7 +19,7 @@ how do I use it?
   $ cd ~/notes
   $ ls
   monday.txt tuesday.txt
-  $ ./plaintext
+  $ ./plaintext html
   $ ls
   monday.txt monday.html tuesday.txt tuesday.html
 
@@ -39,7 +39,7 @@ save it as a text file and tell plaintext where to find it
 
   $ ls
   template.html note.txt
-  $ plaintext ./template.html
+  $ plaintext html --template ./template.html
   $ ls
   template.html note.txt note.html
 
