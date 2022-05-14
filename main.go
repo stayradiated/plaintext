@@ -23,7 +23,8 @@ func main() {
 		renderAsHTML(*htmlTemplate)
 	case "format":
 		formatCmd.Parse(os.Args[2:])
-		format()
+		files := formatCmd.Args()
+		format(files)
 	default:
 		fmt.Println("expected 'html' or 'format' subcommands")
 		os.Exit(1)

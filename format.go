@@ -60,7 +60,6 @@ func formatImageLink(src []byte, srcPath string) []byte {
 			fmt.Println(err)
 			return match
 		}
-		fmt.Println(convertOut)
 
 		tag := fmt.Sprintf(`<< %s >>`, nextImagePathRelative)
 		return []byte(tag)
@@ -89,15 +88,20 @@ func formatFile(srcPath string) error {
 	return f.Sync()
 }
 
-func format() {
-	var err error
-
-	err = walkThroughTextFiles(
-		func(path string, info os.FileInfo) error {
-			return formatFile(path)
-		},
-	)
-	if err != nil {
-		log.Fatal(err)
+func format(filepaths []string) error {
+	if len(filepaths) > 0 {
+		for _, filepath := range filepaths {
+			err := formatFile(filepath)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+		return nil
+	} else {
+		return walkThroughTextFiles(
+			func(filepath string, info os.FileInfo) error {
+				return formatFile(filepath)
+			},
+		)
 	}
 }
