@@ -5,11 +5,40 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 )
+
+func downloadFile(srcUrl string) (string, error) {
+	res, err := http.Get(srcUrl)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+
+	u, err := url.Parse(srcUrl)
+	if err != nil {
+		return "", err
+	}
+	prefix := u.Hostname() + "_"
+
+	tmpFile, err := ioutil.TempFile(os.TempDir(), prefix)
+	if err != nil {
+		return "", err
+	}
+	defer tmpFile.Close()
+
+	if _, err := io.Copy(tmpFile, res.Body); err != nil {
+		return "", err
+	}
+
+	tmpFilePath := tmpFile.Name()
+	return tmpFilePath, nil
+}
 
 func formatImageLink(src []byte, srcPath string) []byte {
 	srcPathDir := filepath.Dir(srcPath)
@@ -21,6 +50,15 @@ func formatImageLink(src []byte, srcPath string) []byte {
 
 		if strings.HasPrefix(imagePath, "./_img/") {
 			return match
+		}
+
+		if strings.HasPrefix(imagePath, "https://") {
+			tmpPath, err := downloadFile(imagePath)
+			if err != nil {
+				fmt.Println(err)
+				return match
+			}
+			imagePath = tmpPath
 		}
 
 		imagePathBase := filepath.Base(imagePath)

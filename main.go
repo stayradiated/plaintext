@@ -8,7 +8,7 @@ import (
 
 func main() {
 	htmlCmd := flag.NewFlagSet("html", flag.ExitOnError)
-	htmlTemplate := htmlCmd.String("template", "", "name")
+	htmlTemplate := htmlCmd.String("template", "", "template")
 
 	formatCmd := flag.NewFlagSet("format", flag.ExitOnError)
 
